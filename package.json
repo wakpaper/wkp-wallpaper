@@ -1,0 +1,24 @@
+{
+  "name": "electron-with-cpp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/src/main.js",
+  "scripts": {
+    "gyp:configure": "node-gyp configure",
+    "gyp:build": "node-gyp rebuild",
+    "build": "tsc",
+    "start": "npm run build && electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bindings": "^1.5.2",
+    "electron": "^26.2.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^7.0.0"
+  }
+}
