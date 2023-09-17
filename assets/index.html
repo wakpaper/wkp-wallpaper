@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title></title>
+</head>
+<body>
+  <div class="displays" id="p"></div>
+  <button onclick="onDetachBtnClick();">적용 취소</button>
+  <script>
+    const $displays = document.getElementById("p");
+    function createDisplay(index, size){
+      const $display = document.createElement("div");
+      $display.classList.add("display");
+      $display.style.setProperty("width", `${size.width / 4}px`);
+      $display.style.setProperty("height", `${size.height / 4}px`);
+      $displays.append($display);
+      $display.addEventListener("click", event => {
+        window.ipc.send("displays:select", index);
+      });
+    }
+    function onDetachBtnClick(){
+      window.ipc.send("displays:detach");
+    }
+    window.ipc.send("displays:give");
+    window.ipc.on("displays:result", (event, data) => {
+      for(let i = 0; i < data.length; i++){
+        createDisplay(i, data[i]);
+      }
+    });
+    window.ipc.on("displays:success", () => {
+      alert("완료!");
+    });
+  </script>
+  <style>
+    :root {
+      counter-reset: display;
+    }
+
+    body {
+        margin: 0;
+    }
+
+    div.displays{
+      display: flex;
+      height: 100vh;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    div.displays>div.display{
+      background-color: #222;
+      counter-increment: display;
+      transition: 100ms;
+      cursor: pointer;
+    }
+
+    div.displays>div.display:hover{
+      background-color: #000000;
+    }
+
+    div.displays>div.display>span{
+      color: white;
+      display: none;
+    }
+
+    div.displays>div.display::after{
+      content: counter(display);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      font-size: 30pt;
+    }
+
+    button{
+      position: absolute;
+      top: 0;
+    }
+  </style>
+</body>
+</html>
