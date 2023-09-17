@@ -7,7 +7,39 @@
     "gyp:configure": "node-gyp configure",
     "gyp:build": "node-gyp rebuild",
     "build": "tsc",
-    "start": "npm run build && electron ."
+    "start": "npm run build && electron .",
+    "deploy:win": "npm run deploy:win32 && npm run deploy:win64",
+    "deploy:win32": "electron-builder --win nsis:ia32",
+    "deploy:win64": "electron-builder --win --x64"
+  },
+  "build": {
+    "productName": "왁페이퍼 테스트",
+    "appId": "wakpaper.wakpaper-test",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ]
+    },
+    "directories": {
+      "buildResources": "./src/",
+      "output": "./deploy/",
+      "app": "."
+    },
+    "extraResources": [
+      {
+        "from": "./assets",
+        "to": "assets",
+        "filter": [
+          "*.html"
+        ]
+      }
+    ]
   },
   "keywords": [],
   "author": "",
@@ -15,6 +47,7 @@
   "devDependencies": {
     "@types/bindings": "^1.5.2",
     "electron": "^26.2.1",
+    "electron-builder": "^24.6.4",
     "typescript": "^5.2.2"
   },
   "dependencies": {
