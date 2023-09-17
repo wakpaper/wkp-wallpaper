@@ -7,9 +7,13 @@
 </head>
 <body>
   <div class="displays" id="p"></div>
-  <button onclick="onDetachBtnClick();">적용 취소</button>
+  <div class="components" id="c">
+    <input placeholder="몇번째 모니터">
+    <button onclick="onDetachBtnClick();">적용 취소</button>
+  </div>
   <script>
     const $displays = document.getElementById("p");
+    const $input = document.querySelector("input");
     function createDisplay(index, size){
       const $display = document.createElement("div");
       $display.classList.add("display");
@@ -21,7 +25,7 @@
       });
     }
     function onDetachBtnClick(){
-      window.ipc.send("displays:detach");
+      window.ipc.send("displays:detach", Number($input.value) - 1);
     }
     window.ipc.send("displays:give");
     window.ipc.on("displays:result", (event, data) => {
@@ -31,6 +35,9 @@
     });
     window.ipc.on("displays:success", () => {
       alert("완료!");
+    });
+    window.ipc.on("displays:fail", () => {
+      alert("실패...");
     });
   </script>
   <style>
@@ -77,7 +84,7 @@
       font-size: 30pt;
     }
 
-    button{
+    div.components{
       position: absolute;
       top: 0;
     }

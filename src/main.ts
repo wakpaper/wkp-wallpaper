@@ -17,42 +17,61 @@ function createWindow(){
   window = mainWindow;
 }
 
-function createAndAttachWindow(index:number){
-  const display = screen.getAllDisplays()[index];
-  const wallpaperWindow_ = new BrowserWindow({
-    width: display.bounds.width,
-    height: display.bounds.height,
-    fullscreen: true,
-    skipTaskbar: true,
-    resizable: false,
-    minimizable: false,
-    maximizable: false,
-    frame: false,
-    focusable: false,
-    hasShadow: false,
-    transparent: true,
-    closable: false,
-    roundedCorners: false,
-    thickFrame: false
-  });
-  wallpaperWindow_.setPosition(display.bounds.x * display.bounds.width, display.bounds.y * display.bounds.height);
-  wallpaperWindow_.loadFile("assets/wallpaper.html");
-  wallpaperWindow = wallpaperWindow_;
-  electronWallpaper.attach(wallpaperWindow, {
-    transparent: true
-  });
-  electronWallpaper.refresh();
+function createWallpaperWindow(index:number){
+  if(!wallpaperWindows.some(item => item.displayIndex === index)){
+    const display = screen.getAllDisplays()[index];
+    const wallpaperWindow = new BrowserWindow({
+      width: display.bounds.width,
+      height: display.bounds.height,
+      fullscreen: true,
+      skipTaskbar: true,
+      resizable: false,
+      minimizable: false,
+      maximizable: false,
+      frame: false,
+      focusable: false,
+      hasShadow: false,
+      transparent: true,
+      closable: false,
+      roundedCorners: false,
+      thickFrame: false,
+      autoHideMenuBar: true
+    });
+    wallpaperWindow.setBounds(display.bounds);
+    wallpaperWindow.loadFile("assets/wallpaper.html");
+    wallpaperWindows.push({
+      window: wallpaperWindow,
+      displayIndex: index
+    });
+    try{
+      electronWallpaper.attach(wallpaperWindow);
+      electronWallpaper.refresh();
+    }catch(e){
+      console.log(e);
+    }
+    return true;
+  }
+  return false;
 }
 
 const wallpaper = bindings("wallpaper");
 let window:BrowserWindow;
-let wallpaperWindow:BrowserWindow|undefined;
+let wallpaperWindows:WallpaperWindow[] = [];
 
 app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {
     if(BrowserWindow.getAllWindows().length === 0)
       createWindow();
+  });
+  screen.on("display-metrics-changed", () => {
+    const displays = screen.getAllDisplays();
+    for(const screen of wallpaperWindows){
+      if(!screen.window.isDestroyed()){
+        const display = displays[screen.displayIndex];
+        screen.window.setBounds(display.bounds);
+      }
+    }
   });
 });
 
@@ -61,14 +80,26 @@ ipcMain.on("displays:give", event => {
 });
 
 ipcMain.on("displays:select", (event, index) => {
-  createAndAttachWindow(index);
+  createWallpaperWindow(index)
+    ? event.reply("displays:success")
+    : event.reply("displays:fail")
+  ;
+});
+
+ipcMain.on("displays:detach", (event, index) => {
+  const wallpaperWindowIndex = wallpaperWindows.findIndex(item => item.displayIndex === index);
+  if(wallpaperWindowIndex !== -1){
+    const wallpaperWindow = wallpaperWindows[wallpaperWindowIndex];
+    electronWallpaper.detach(wallpaperWindow.window);
+    electronWallpaper.refresh();
+    wallpaperWindow.window.setClosable(true);
+    wallpaperWindow.window.close();
+    wallpaperWindows.splice(wallpaperWindowIndex, 1);
+  }
   event.reply("displays:success");
 });
 
-ipcMain.on("displays:detach", event => {
-  if(!wallpaperWindow) return;
-  electronWallpaper.detach(wallpaperWindow);
-  wallpaperWindow.setClosable(true);
-  wallpaperWindow.close();
-  event.reply("displays:success");
-});
+interface WallpaperWindow{
+  window:BrowserWindow;
+  displayIndex:number;
+};
