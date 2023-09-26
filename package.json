@@ -9,8 +9,8 @@
     "build": "tsc",
     "start": "npm run build && electron .",
     "deploy:win": "npm run deploy:win32 && npm run deploy:win64",
-    "deploy:win32": "electron-builder --win nsis:ia32",
-    "deploy:win64": "electron-builder --win --x64"
+    "deploy:win32": "npm run build && electron-builder --win nsis:ia32",
+    "deploy:win64": "npm run build && electron-builder --win --x64"
   },
   "build": {
     "productName": "왁페이퍼 테스트",

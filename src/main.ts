@@ -14,12 +14,18 @@ function createWindow(){
     show: false
   });
   mainWindow.maximize();
-  mainWindow.setMenu(null);
+  if(app.isPackaged){
+    mainWindow.setMenu(null);
+  }
   mainWindow.loadFile("assets/index.html");
   window = mainWindow;
 }
 
 function createWallpaperWindow(index:number){
+  const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
+  const data:Desktop[] = JSON.parse(chunk.toString());
+  if(data.some(item => item.display === index))
+    return false;
   const display = screen.getAllDisplays()[index];
   const wallpaperWindow = new BrowserWindow({
     width: display.bounds.width,
@@ -42,10 +48,11 @@ function createWallpaperWindow(index:number){
   try{
     electronWallpaper.attach(wallpaperWindow);
     electronWallpaper.refresh();
-    const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
-    const data = JSON.parse(chunk.toString());
-    data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getProcessId()});
-    fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+    wallpaperWindow.webContents.on("did-finish-load", () => {
+      data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getOSProcessId()});
+      fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+    });
+    return true;
   }catch(e){
     console.log(e);
   }
@@ -83,25 +90,41 @@ app.whenReady().then(() => {
 });
 
 ipcMain.on("displays:give", event => {
-  event.reply("displays:result", screen.getAllDisplays().map(item => ({width: item.bounds.width, height: item.bounds.height, rotation: item.rotation})));
+  const primary = screen.getPrimaryDisplay();
+  event.reply("displays:result", screen.getAllDisplays().map(item => ({
+    width: item.bounds.width,
+    height: item.bounds.height,
+    rotation: item.rotation,
+    primary: primary.id === item.id
+  })));
 });
 
 ipcMain.on("displays:select", (event, index) => {
-  createWallpaperWindow(index);
-  event.reply("displays:success");
+  const result = createWallpaperWindow(index);
+  result
+    ? event.reply("displays:success")
+    : event.reply("displays:already-done")
+  ;
 });
 
 ipcMain.on("displays:detach", (event, index) => {
   const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
-  const data = JSON.parse(chunk.toString());
-  const dataItem = data.find((item:{display:number;}) => item.display === index);
+  const data:Desktop[] = JSON.parse(chunk.toString());
+  const dataItem = data.find(item => item.display === index);
   if(!dataItem){
     event.reply("displays:fail");
     return;
   }
+  data.splice(index, 1);
+  fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+  wallpaper.detachWindow(process.pid);
   process.kill(dataItem.pid);
   electronWallpaper.refresh();
   event.reply("displays:success");
+});
+
+ipcMain.on("force-reload", () => {
+  electronWallpaper.refresh();
 });
 
 function strEncodeUTF16(str:string){
@@ -112,3 +135,9 @@ function strEncodeUTF16(str:string){
   }
   return new Uint8Array(buf);
 }
+
+interface Desktop{
+  apply:boolean;
+  display:number;
+  pid:number;
+};

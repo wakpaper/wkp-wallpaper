@@ -7,26 +7,38 @@
 </head>
 <body>
   <div class="displays" id="p"></div>
-  <div class="components" id="c">
-    <!-- <input placeholder="몇번째 모니터">
-    <button onclick="onDetachBtnClick();">적용 취소</button> -->
+  <div class="components">
+    <div class="button" onclick="onAttachBtnClick()">적용하기</div>
+    <div class="button" onclick="onDetachBtnClick()">적용 취소하기</div>
+    <div class="button" onclick="window.ipc.send('force-reload')">새로고침</div>
   </div>
   <script>
     const $displays = document.getElementById("p");
-    const $input = document.querySelector("input");
+    let selectIndex = 0;
     function createDisplay(index, size){
       const $display = document.createElement("div");
       $display.classList.add("display");
+      if(size.primary)
+        $display.classList.add("primary");
+      if(selectIndex === index)
+        $display.classList.add("active");
       $display.style.setProperty("width", `${size.width / 4}px`);
       $display.style.setProperty("height", `${size.height / 4}px`);
       $display.style.setProperty("transform", `rotate(${size.rotation}deg)`);
       $displays.append($display);
-      $display.addEventListener("click", event => {
-        window.ipc.send("displays:select", index);
+      $display.addEventListener("click", () => {
+        selectIndex = index;
+        for(const child of $displays.childNodes){
+          child.classList.remove("active");
+        }
+        $display.classList.add("active");
       });
     }
+    function onAttachBtnClick(){
+      window.ipc.send("displays:select", selectIndex);
+    }
     function onDetachBtnClick(){
-      window.ipc.send("displays:detach", Number($input.value) - 1);
+      window.ipc.send("displays:detach", selectIndex);
     }
     window.ipc.send("displays:give");
     window.ipc.on("displays:result", (event, data) => {
@@ -37,6 +49,9 @@
     window.ipc.on("displays:success", () => {
       alert("완료!");
     });
+    window.ipc.on("displays:already-done", () => {
+      alert("이미 이 디스플레이에는 배경화면이 적용되어 있어요.");
+    });
     window.ipc.on("displays:fail", () => {
       alert("실패...");
     });
@@ -46,13 +61,18 @@
       counter-reset: display;
     }
 
-    body {
-        margin: 0;
+    body{
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      height: 100vh;
+      gap: 40px;
     }
 
     div.displays{
       display: flex;
-      height: 100vh;
       justify-content: center;
       align-items: center;
       gap: 20px;
@@ -65,8 +85,16 @@
       cursor: pointer;
     }
 
-    div.displays>div.display:hover{
-      background-color: #000000;
+    div.displays>div.display.primary{
+      background-color: #049762;
+    }
+
+    div.displays>div.display.active{
+      filter: brightness(0.5);
+    }
+
+    div.displays>div.display:not(.active):hover{
+      filter: brightness(0.8);
     }
 
     div.displays>div.display>span{
@@ -86,8 +114,15 @@
     }
 
     div.components{
-      position: absolute;
-      top: 0;
+      display: flex;
+      gap: 60px;
+    }
+
+    div.components>div.button{
+      padding: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      cursor: pointer;
     }
   </style>
 </body>
