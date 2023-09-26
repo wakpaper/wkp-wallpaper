@@ -1,6 +1,7 @@
 import {BrowserWindow, app, ipcMain, screen} from "electron";
 import bindings from "bindings";
 import path from "node:path";
+import fs from "fs";
 import * as electronWallpaper from "electron-as-wallpaper";
 
 function createWindow(){
@@ -9,7 +10,8 @@ function createWindow(){
     height: 1080,
     webPreferences: {
       preload: path.join(__dirname, "preload.js")
-    }
+    },
+    show: false
   });
   mainWindow.maximize();
   mainWindow.setMenu(null);
@@ -18,88 +20,95 @@ function createWindow(){
 }
 
 function createWallpaperWindow(index:number){
-  if(!wallpaperWindows.some(item => item.displayIndex === index)){
-    const display = screen.getAllDisplays()[index];
-    const wallpaperWindow = new BrowserWindow({
-      width: display.bounds.width,
-      height: display.bounds.height,
-      fullscreen: true,
-      skipTaskbar: true,
-      resizable: false,
-      minimizable: false,
-      maximizable: false,
-      frame: false,
-      focusable: false,
-      hasShadow: false,
-      transparent: true,
-      closable: false,
-      roundedCorners: false,
-      thickFrame: false,
-      autoHideMenuBar: true
-    });
-    wallpaperWindow.setBounds(display.bounds);
-    wallpaperWindow.loadFile("assets/wallpaper.html");
-    wallpaperWindows.push({
-      window: wallpaperWindow,
-      displayIndex: index
-    });
-    try{
-      electronWallpaper.attach(wallpaperWindow);
-      electronWallpaper.refresh();
-    }catch(e){
-      console.log(e);
-    }
-    return true;
+  const display = screen.getAllDisplays()[index];
+  const wallpaperWindow = new BrowserWindow({
+    width: display.bounds.width,
+    height: display.bounds.height,
+    fullscreen: true,
+    skipTaskbar: true,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    frame: false,
+    focusable: false,
+    hasShadow: false,
+    transparent: true,
+    closable: false,
+    roundedCorners: false,
+    thickFrame: false
+  });
+  wallpaperWindow.setBounds(display.bounds);
+  wallpaperWindow.loadFile("assets/wallpaper.html");
+  try{
+    electronWallpaper.attach(wallpaperWindow);
+    electronWallpaper.refresh();
+    const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
+    const data = JSON.parse(chunk.toString());
+    data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getProcessId()});
+    fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+  }catch(e){
+    console.log(e);
   }
-  return false;
 }
 
 const wallpaper = bindings("wallpaper");
+const WALLPAPER_PATH = path.join(app.getPath("userData"), "wallpaper.json");
 let window:BrowserWindow;
-let wallpaperWindows:WallpaperWindow[] = [];
 
 app.whenReady().then(() => {
   createWindow();
+  // wallpaper.setWallpaper(strEncodeUTF16("C:\\Users\\bsiu6\\AppData\\Roaming\\wakpaper-client\\wallpapers\\4568708\\비챤_팬아트_4_일러.png"));
+  if(app.isPackaged){
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      openAsHidden: true,
+      path: app.getPath("exe")
+    });
+    if(fs.existsSync(WALLPAPER_PATH)){
+      const chunk = fs.readFileSync(WALLPAPER_PATH);
+      const data = JSON.parse(chunk.toString());
+      for(const item of data){
+        if(item.apply){
+          createWallpaperWindow(item.display);
+        }
+      }
+    }
+  }
   app.on("activate", () => {
     if(BrowserWindow.getAllWindows().length === 0)
       createWindow();
   });
   screen.on("display-metrics-changed", () => {
-    const displays = screen.getAllDisplays();
-    for(const screen of wallpaperWindows){
-      if(!screen.window.isDestroyed()){
-        const display = displays[screen.displayIndex];
-        screen.window.setBounds(display.bounds);
-      }
-    }
   });
 });
 
 ipcMain.on("displays:give", event => {
-  event.reply("displays:result", screen.getAllDisplays().map(item => ({width: item.bounds.width, height: item.bounds.height})));
+  event.reply("displays:result", screen.getAllDisplays().map(item => ({width: item.bounds.width, height: item.bounds.height, rotation: item.rotation})));
 });
 
 ipcMain.on("displays:select", (event, index) => {
-  createWallpaperWindow(index)
-    ? event.reply("displays:success")
-    : event.reply("displays:fail")
-  ;
-});
-
-ipcMain.on("displays:detach", (event, index) => {
-  const wallpaperWindowIndex = wallpaperWindows.findIndex(item => item.displayIndex === index);
-  if(wallpaperWindowIndex !== -1){
-    const wallpaperWindow = wallpaperWindows[wallpaperWindowIndex];
-    electronWallpaper.detach(wallpaperWindow.window);
-    electronWallpaper.refresh();
-    wallpaperWindow.window.setClosable(true);
-    wallpaperWindow.window.close();
-    wallpaperWindows.splice(wallpaperWindowIndex, 1);
-  }
+  createWallpaperWindow(index);
   event.reply("displays:success");
 });
 
-interface WallpaperWindow{
-  window:BrowserWindow;
-  displayIndex:number;
-};
+ipcMain.on("displays:detach", (event, index) => {
+  const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
+  const data = JSON.parse(chunk.toString());
+  const dataItem = data.find((item:{display:number;}) => item.display === index);
+  if(!dataItem){
+    event.reply("displays:fail");
+    return;
+  }
+  process.kill(dataItem.pid);
+  electronWallpaper.refresh();
+  event.reply("displays:success");
+});
+
+function strEncodeUTF16(str:string){
+  let buf = new ArrayBuffer(str.length * 2);
+  let bufView = new Uint16Array(buf);
+  for (var i = 0, strLen = str.length; i < strLen; i++){
+    bufView[i] = str.charCodeAt(i);
+  }
+  return new Uint8Array(buf);
+}

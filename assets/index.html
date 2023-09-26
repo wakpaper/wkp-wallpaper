@@ -8,8 +8,8 @@
 <body>
   <div class="displays" id="p"></div>
   <div class="components" id="c">
-    <input placeholder="몇번째 모니터">
-    <button onclick="onDetachBtnClick();">적용 취소</button>
+    <!-- <input placeholder="몇번째 모니터">
+    <button onclick="onDetachBtnClick();">적용 취소</button> -->
   </div>
   <script>
     const $displays = document.getElementById("p");
@@ -19,6 +19,7 @@
       $display.classList.add("display");
       $display.style.setProperty("width", `${size.width / 4}px`);
       $display.style.setProperty("height", `${size.height / 4}px`);
+      $display.style.setProperty("transform", `rotate(${size.rotation}deg)`);
       $displays.append($display);
       $display.addEventListener("click", event => {
         window.ipc.send("displays:select", index);
