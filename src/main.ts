@@ -11,7 +11,8 @@ function createWindow(){
     webPreferences: {
       preload: path.join(__dirname, "preload.js")
     },
-    show: false
+    show: false,
+    icon: path.join(__dirname, "assets/imgs/WE-Logo-For-Avatar-1080p.png")
   });
   mainWindow.maximize();
   if(app.isPackaged){
@@ -21,10 +22,10 @@ function createWindow(){
   window = mainWindow;
 }
 
-function createWallpaperWindow(index:number){
+function createWallpaperWindow(index:number, computerReload:boolean = false){
   const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
   const data:Desktop[] = JSON.parse(chunk.toString());
-  if(data.some(item => item.display === index))
+  if(data.some(item => item.display === index) && !computerReload)
     return false;
   const display = screen.getAllDisplays()[index];
   const wallpaperWindow = new BrowserWindow({
@@ -64,29 +65,25 @@ let window:BrowserWindow;
 
 app.whenReady().then(() => {
   createWindow();
-  // wallpaper.setWallpaper(strEncodeUTF16("C:\\Users\\bsiu6\\AppData\\Roaming\\wakpaper-client\\wallpapers\\4568708\\비챤_팬아트_4_일러.png"));
   if(app.isPackaged){
+    app.setName("왁페이퍼 엔진 테스트");
     app.setLoginItemSettings({
       openAtLogin: true,
       openAsHidden: true,
       path: app.getPath("exe")
     });
+    
     if(fs.existsSync(WALLPAPER_PATH)){
       const chunk = fs.readFileSync(WALLPAPER_PATH);
       const data = JSON.parse(chunk.toString());
+      if(data.length > 0){
+        fs.writeFileSync(WALLPAPER_PATH, "[]");
+      }
       for(const item of data){
-        if(item.apply){
-          createWallpaperWindow(item.display);
-        }
+        createWallpaperWindow(item.display, true);
       }
     }
   }
-  app.on("activate", () => {
-    if(BrowserWindow.getAllWindows().length === 0)
-      createWindow();
-  });
-  screen.on("display-metrics-changed", () => {
-  });
 });
 
 ipcMain.on("displays:give", event => {
