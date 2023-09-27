@@ -1,4 +1,4 @@
-import {BrowserWindow, Menu, Tray, app, ipcMain, screen} from "electron";
+import {BrowserWindow, Menu, Tray, app, ipcMain, nativeImage, screen} from "electron";
 import bindings from "bindings";
 import path from "node:path";
 import fs from "fs";
@@ -62,14 +62,6 @@ app.whenReady().then(() => {
       path: app.getPath("exe"),
       enabled: true
     });
-    const tray = new Tray("assets/imgs/logo.png");
-    const contextMenu = Menu.buildFromTemplate([
-      {
-        label: "열기"
-      }
-    ]);
-    tray.setToolTip("왁페이퍼 엔진");
-    tray.setContextMenu(contextMenu);
     if(fs.existsSync(WALLPAPER_PATH)){
       const chunk = fs.readFileSync(WALLPAPER_PATH);
       const data = JSON.parse(chunk.toString());
@@ -81,7 +73,18 @@ app.whenReady().then(() => {
       }
     }
   }
-
+  const tray = new Tray(path.join(__dirname, "assets/imgs/logo.png"));
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: "열기",
+      click: () => {
+        window.show();
+        window.focus();
+      }
+    }
+  ]);
+  tray.setToolTip("왁페이퍼 엔진");
+  tray.setContextMenu(contextMenu);
   app.on("activate",() => {
     window.show();
     window.focus();

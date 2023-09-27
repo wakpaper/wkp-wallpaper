@@ -1,7 +1,7 @@
 {
-  "name": "electron-with-cpp",
-  "version": "1.0.0",
-  "description": "",
+  "name": "wakpaper-test",
+  "version": "0.0.0-a",
+  "description": "왁페이퍼 테스트용입니다.",
   "main": "dist/src/main.js",
   "scripts": {
     "gyp:configure": "node-gyp configure",
@@ -28,17 +28,10 @@
       ]
     },
     "directories": {
-      "buildResources": "./src/",
-      "output": "./deploy/",
-      "app": "."
+      "buildResources": "./src",
+      "output": "./deploy/"
     },
-    "extraResources": [
-      {
-        "from": "./assets",
-        "to": "assets",
-        "filter": ["*"]
-      }
-    ]
+    "extraResources": ["assets/**"]
   },
   "keywords": [],
   "author": "",
