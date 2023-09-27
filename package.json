@@ -16,6 +16,7 @@
     "productName": "왁페이퍼 테스트",
     "appId": "wakpaper.wakpaper-test",
     "win": {
+      "icon": "assets/imgs/logo.png",
       "target": [
         {
           "target": "nsis",
@@ -35,9 +36,7 @@
       {
         "from": "./assets",
         "to": "assets",
-        "filter": [
-          "*.html"
-        ]
+        "filter": ["*"]
       }
     ]
   },

@@ -1,26 +1,8 @@
-import {BrowserWindow, app, ipcMain, screen} from "electron";
+import {BrowserWindow, Menu, Tray, app, ipcMain, screen} from "electron";
 import bindings from "bindings";
 import path from "node:path";
 import fs from "fs";
 import * as electronWallpaper from "electron-as-wallpaper";
-
-function createWindow(){
-  const mainWindow = new BrowserWindow({
-    width: 1920,
-    height: 1080,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js")
-    },
-    show: false,
-    icon: path.join(__dirname, "assets/imgs/WE-Logo-For-Avatar-1080p.png")
-  });
-  mainWindow.maximize();
-  if(app.isPackaged){
-    mainWindow.setMenu(null);
-  }
-  mainWindow.loadFile("assets/index.html");
-  window = mainWindow;
-}
 
 function createWallpaperWindow(index:number, computerReload:boolean = false){
   const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
@@ -42,37 +24,52 @@ function createWallpaperWindow(index:number, computerReload:boolean = false){
     transparent: true,
     closable: false,
     roundedCorners: false,
-    thickFrame: false
+    thickFrame: false,
+    title: "Wallpaper"
   });
   wallpaperWindow.setBounds(display.bounds);
   wallpaperWindow.loadFile("assets/wallpaper.html");
-  try{
-    electronWallpaper.attach(wallpaperWindow);
-    electronWallpaper.refresh();
-    wallpaperWindow.webContents.on("did-finish-load", () => {
-      data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getOSProcessId()});
-      fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
-    });
-    return true;
-  }catch(e){
-    console.log(e);
-  }
+  electronWallpaper.attach(wallpaperWindow);
+  electronWallpaper.refresh();
+  wallpaperWindow.webContents.on("did-finish-load", () => {
+    data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getOSProcessId()});
+    fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+  });
 }
 
 const wallpaper = bindings("wallpaper");
 const WALLPAPER_PATH = path.join(app.getPath("userData"), "wallpaper.json");
-let window:BrowserWindow;
 
 app.whenReady().then(() => {
-  createWindow();
+  const window = new BrowserWindow({
+    width: 1920,
+    height: 1080,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js")
+    },
+    show: false,
+    icon: "assets/imgs/logo.png"
+  });
+  window.maximize();
+  if(app.isPackaged)
+    window.setMenu(null);
+  window.loadFile("assets/index.html");
   if(app.isPackaged){
     app.setName("왁페이퍼 엔진 테스트");
     app.setLoginItemSettings({
       openAtLogin: true,
       openAsHidden: true,
-      path: app.getPath("exe")
+      path: app.getPath("exe"),
+      enabled: true
     });
-    
+    const tray = new Tray("assets/imgs/logo.png");
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: "열기"
+      }
+    ]);
+    tray.setToolTip("왁페이퍼 엔진");
+    tray.setContextMenu(contextMenu);
     if(fs.existsSync(WALLPAPER_PATH)){
       const chunk = fs.readFileSync(WALLPAPER_PATH);
       const data = JSON.parse(chunk.toString());
@@ -84,6 +81,11 @@ app.whenReady().then(() => {
       }
     }
   }
+
+  app.on("activate",() => {
+    window.show();
+    window.focus();
+  });
 });
 
 ipcMain.on("displays:give", event => {
@@ -114,7 +116,7 @@ ipcMain.on("displays:detach", (event, index) => {
   }
   data.splice(index, 1);
   fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
-  wallpaper.detachWindow(process.pid);
+  wallpaper.detachWindow(process);
   process.kill(dataItem.pid);
   electronWallpaper.refresh();
   event.reply("displays:success");
@@ -122,6 +124,7 @@ ipcMain.on("displays:detach", (event, index) => {
 
 ipcMain.on("force-reload", () => {
   electronWallpaper.refresh();
+  fs.writeFileSync(WALLPAPER_PATH, "[]");
 });
 
 function strEncodeUTF16(str:string){

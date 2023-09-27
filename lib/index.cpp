@@ -1,5 +1,5 @@
 #include <napi.h>
-#include <iostream>
+
 #include <windows.h>
 
 BOOL CALLBACK EnumChildWindowProc(HWND hWnd, LPARAM lParam)
