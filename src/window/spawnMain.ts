@@ -15,6 +15,12 @@ const spawnMain = ():BrowserWindow => {
   if(app.isPackaged)
   mainWindow.setMenu(null);
   mainWindow.loadFile("resources/html/index.html");
+  mainWindow.on("close", (event) => {
+    if(mainWindow.isVisible()){
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
   return mainWindow;
 };
 

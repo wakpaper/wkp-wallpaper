@@ -1,22 +1,36 @@
-import {type BrowserWindow, Menu, Tray, app} from "electron";
+import {type BrowserWindow, Menu, Tray, nativeImage} from "electron";
+
+const clickOpenMenu = (window:BrowserWindow) => () => {
+  window.show();
+  window.focus();
+};
 
 const initTray = (window:BrowserWindow):Tray => {
-  const tray = new Tray("resources/img/icon.png");
+  const icon = nativeImage.createFromPath("resources/img/icon.png");
+  const tray = new Tray(icon.resize({width: 36}));
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: "열기",
-      click: () => {
-        window.show();
-        window.focus();
-      }
+      icon: icon.resize({width: 16}),
+      label: "Wakpaper Engine",
+      enabled: false
     },
     {
-      label: "끝내기",
-      click: () => {
-        app.quit();
-      }
+      type: "separator"
+    },
+    {
+      label: "열기",
+      click: clickOpenMenu(window)
+    },
+    {
+      type: "separator"
+    },
+    {
+      role: "quit",
+      type: "normal",
+      label: "끝내기"
     }
   ]);
+  tray.addListener("click", clickOpenMenu(window));
   tray.setToolTip("왁페이퍼 엔진");
   tray.setContextMenu(contextMenu);
   return tray;

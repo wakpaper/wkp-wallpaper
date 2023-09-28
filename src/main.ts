@@ -22,13 +22,6 @@ app.whenReady().then(() => {
   tray = initTray(window);
 });
 
-app.on("quit", (event) => {
-  if(window.isVisible()){
-    window.hide();
-    event.preventDefault();
-  }
-});
-
 app.on("activate", () => {
   window.show();
   window.focus();
