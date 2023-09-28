@@ -28,7 +28,9 @@ const spawnWallpaper = (index:number, computerReload:boolean = false):boolean =>
   });
   wallpaperWindow.setBounds(display.bounds);
   wallpaperWindow.loadFile("resources/html/wallpaper.html");
-  electronWallpaper.attach(wallpaperWindow);
+  electronWallpaper.attach(wallpaperWindow, {
+    forwardMouseInput: true
+  });
   wallpaperWindow.webContents.on("did-finish-load", () => {
     data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getOSProcessId()});
     fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));

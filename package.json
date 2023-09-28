@@ -23,7 +23,9 @@
     "extraResources": [
       {
         "from": "resources",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ]
   },
@@ -32,7 +34,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/bindings": "^1.5.2",
-    "electron": "^26.2.2",
+    "electron": "^26.2.3",
     "electron-builder": "^24.6.4",
     "typescript": "^5.2.2"
   },

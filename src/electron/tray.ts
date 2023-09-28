@@ -40,6 +40,13 @@ const initTray = (window:BrowserWindow):Tray => {
       type: "separator"
     },
     {
+      label: "배경화면 끄기",
+      click: () => void 0
+    },
+    {
+      type: "separator"
+    },
+    {
       label: "끝내기",
       click: clickQuit
     }
