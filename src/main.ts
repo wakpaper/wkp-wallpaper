@@ -28,7 +28,7 @@ function createWallpaperWindow(index:number, computerReload:boolean = false){
     title: "Wallpaper"
   });
   wallpaperWindow.setBounds(display.bounds);
-  wallpaperWindow.loadFile("assets/wallpaper.html");
+  wallpaperWindow.loadFile("resources/html/wallpaper.html");
   electronWallpaper.attach(wallpaperWindow);
   electronWallpaper.refresh();
   wallpaperWindow.webContents.on("did-finish-load", () => {
@@ -48,12 +48,12 @@ app.whenReady().then(() => {
       preload: path.join(__dirname, "preload.js")
     },
     show: false,
-    icon: "assets/imgs/logo.png"
+    icon: "resources/img/favico.ico"
   });
   window.maximize();
   if(app.isPackaged)
     window.setMenu(null);
-  window.loadFile("assets/index.html");
+  window.loadFile("resources/html/index.html");
   if(app.isPackaged){
     app.setName("왁페이퍼 엔진 테스트");
     app.setLoginItemSettings({
@@ -73,7 +73,7 @@ app.whenReady().then(() => {
       }
     }
   }
-  const tray = new Tray(path.join(__dirname, "assets/imgs/logo.png"));
+  const tray = new Tray("resources/img/icon.png");
   const contextMenu = Menu.buildFromTemplate([
     {
       label: "열기",

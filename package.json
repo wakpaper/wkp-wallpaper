@@ -8,37 +8,31 @@
     "gyp:build": "node-gyp rebuild",
     "build": "tsc",
     "start": "yarn build && electron .",
-    "deploy:win": "yarn deploy:win32 && yarn deploy:win64",
-    "deploy:win32": "yarn build && electron-builder --win nsis:ia32",
-    "deploy:win64": "yarn build && electron-builder --win --x64"
+    "deploy": "yarn build && electron-builder --win --x64"
   },
   "build": {
     "productName": "왁페이퍼 테스트",
-    "appId": "wakpaper.wakpaper-test",
+    "appId": "com.wakpaper-test",
     "win": {
-      "icon": "assets/imgs/logo.png",
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64",
-            "ia32"
-          ]
-        }
-      ]
+      "icon": "resources/img/favico.ico"
     },
     "directories": {
-      "buildResources": "./src",
-      "output": "./deploy/"
+      "buildResources": "assets",
+      "output": "deploy"
     },
-    "extraResources": ["assets/**"]
+    "extraResources": [
+      {
+        "from": "resources",
+        "filter": ["**/*"]
+      }
+    ]
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/bindings": "^1.5.2",
-    "electron": "^26.2.1",
+    "electron": "^26.2.2",
     "electron-builder": "^24.6.4",
     "typescript": "^5.2.2"
   },
