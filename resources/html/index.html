@@ -11,7 +11,7 @@
   <div class="components">
     <div class="button" onclick="onAttachBtnClick()">적용하기</div>
     <div class="button" onclick="onDetachBtnClick()">적용 취소하기</div>
-    <div class="button" onclick="window.ipc.send('force-reload')">새로고침</div>
+    <div class="button" onclick="window.ipc.send('reload')">새로고침</div>
   </div>
   <script>
     const $displays = document.getElementById("p");
@@ -36,10 +36,10 @@
       });
     }
     function onAttachBtnClick(){
-      window.ipc.send("displays:select", selectIndex);
+      window.ipc.send("display:attach", selectIndex);
     }
     function onDetachBtnClick(){
-      window.ipc.send("displays:detach", selectIndex);
+      window.ipc.send("display:detach", selectIndex);
     }
     window.ipc.send("displays:give");
     window.ipc.on("displays:result", (event, data) => {
@@ -123,7 +123,12 @@
       padding: 8px;
       border: 1px solid rgba(0, 0, 0, 0.3);
       border-radius: 10px;
+      transition: 100ms;
       cursor: pointer;
+    }
+
+    div.components>div.button:hover{
+      border-color: rgba(0, 0, 0, 0.8);
     }
   </style>
 </body>

@@ -1,94 +1,42 @@
-import {BrowserWindow, Menu, Tray, app, ipcMain, nativeImage, screen} from "electron";
+import {BrowserWindow, Tray, app, ipcMain, screen} from "electron";
 import bindings from "bindings";
 import path from "node:path";
 import fs from "fs";
 import * as electronWallpaper from "electron-as-wallpaper";
+import spawnMain from "./window/spawnMain";
+import spawnWallpaper from "./window/spawnWallpaper";
+import initTray from "./electron/tray";
+import productionInitialSetting from "./electron/productionInitialSetting";
 
-function createWallpaperWindow(index:number, computerReload:boolean = false){
-  const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
-  const data:Desktop[] = JSON.parse(chunk.toString());
-  if(data.some(item => item.display === index) && !computerReload)
-    return false;
-  const display = screen.getAllDisplays()[index];
-  const wallpaperWindow = new BrowserWindow({
-    width: display.bounds.width,
-    height: display.bounds.height,
-    fullscreen: true,
-    skipTaskbar: true,
-    resizable: false,
-    minimizable: false,
-    maximizable: false,
-    frame: false,
-    focusable: false,
-    hasShadow: false,
-    transparent: true,
-    closable: false,
-    roundedCorners: false,
-    thickFrame: false,
-    title: "Wallpaper"
-  });
-  wallpaperWindow.setBounds(display.bounds);
-  wallpaperWindow.loadFile("resources/html/wallpaper.html");
-  electronWallpaper.attach(wallpaperWindow);
-  electronWallpaper.refresh();
-  wallpaperWindow.webContents.on("did-finish-load", () => {
-    data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getOSProcessId()});
-    fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
-  });
-}
-
+export const WALLPAPER_PATH = path.join(app.getPath("userData"), "wallpaper.json");
 const wallpaper = bindings("wallpaper");
-const WALLPAPER_PATH = path.join(app.getPath("userData"), "wallpaper.json");
+
+let window:BrowserWindow;
+let tray:Tray|null = null;
 
 app.whenReady().then(() => {
-  const window = new BrowserWindow({
-    width: 1920,
-    height: 1080,
-    webPreferences: {
-      preload: path.join(__dirname, "preload.js")
-    },
-    show: false,
-    icon: "resources/img/favico.ico"
-  });
-  window.maximize();
+  window = spawnMain();
+  app.setName("왁페이퍼 엔진 테스트");
   if(app.isPackaged)
-    window.setMenu(null);
-  window.loadFile("resources/html/index.html");
-  if(app.isPackaged){
-    app.setName("왁페이퍼 엔진 테스트");
-    app.setLoginItemSettings({
-      openAtLogin: true,
-      openAsHidden: true,
-      path: app.getPath("exe"),
-      enabled: true
-    });
-    if(fs.existsSync(WALLPAPER_PATH)){
-      const chunk = fs.readFileSync(WALLPAPER_PATH);
-      const data = JSON.parse(chunk.toString());
-      if(data.length > 0){
-        fs.writeFileSync(WALLPAPER_PATH, "[]");
-      }
-      for(const item of data){
-        createWallpaperWindow(item.display, true);
-      }
-    }
+    productionInitialSetting();
+  tray = initTray(window);
+});
+
+app.on("quit", (event) => {
+  if(window.isVisible()){
+    window.hide();
+    event.preventDefault();
   }
-  const tray = new Tray("resources/img/icon.png");
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: "열기",
-      click: () => {
-        window.show();
-        window.focus();
-      }
-    }
-  ]);
-  tray.setToolTip("왁페이퍼 엔진");
-  tray.setContextMenu(contextMenu);
-  app.on("activate",() => {
-    window.show();
-    window.focus();
-  });
+});
+
+app.on("activate", () => {
+  window.show();
+  window.focus();
+});
+
+app.on("window-all-closed", () => {
+  if(process.platform !== "darwin")
+    app.quit();
 });
 
 ipcMain.on("displays:give", event => {
@@ -101,15 +49,15 @@ ipcMain.on("displays:give", event => {
   })));
 });
 
-ipcMain.on("displays:select", (event, index) => {
-  const result = createWallpaperWindow(index);
+ipcMain.on("display:attach", (event, index) => {
+  const result = spawnWallpaper(index);
   result
     ? event.reply("displays:success")
     : event.reply("displays:already-done")
   ;
 });
 
-ipcMain.on("displays:detach", (event, index) => {
+ipcMain.on("display:detach", (event, index) => {
   const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
   const data:Desktop[] = JSON.parse(chunk.toString());
   const dataItem = data.find(item => item.display === index);
@@ -125,22 +73,7 @@ ipcMain.on("displays:detach", (event, index) => {
   event.reply("displays:success");
 });
 
-ipcMain.on("force-reload", () => {
+ipcMain.on("reload", () => {
   electronWallpaper.refresh();
   fs.writeFileSync(WALLPAPER_PATH, "[]");
 });
-
-function strEncodeUTF16(str:string){
-  let buf = new ArrayBuffer(str.length * 2);
-  let bufView = new Uint16Array(buf);
-  for (var i = 0, strLen = str.length; i < strLen; i++){
-    bufView[i] = str.charCodeAt(i);
-  }
-  return new Uint8Array(buf);
-}
-
-interface Desktop{
-  apply:boolean;
-  display:number;
-  pid:number;
-};
