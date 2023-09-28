@@ -8,12 +8,15 @@ const spawnMain = ():BrowserWindow => {
     webPreferences: {
       preload: path.join(__dirname, "../preload.js")
     },
-    show: false,
-    icon: "resources/img/favico.ico"
+    icon: "resources/img/favico.ico",
+    show: false
   });
-  mainWindow.maximize();
+  if(process.argv.indexOf("--hidden") !== -1)
+    mainWindow.hide();
+  else
+    mainWindow.show();
   if(app.isPackaged)
-  mainWindow.setMenu(null);
+    mainWindow.setMenu(null);
   mainWindow.loadFile("resources/html/index.html");
   mainWindow.on("close", (event) => {
     if(mainWindow.isVisible()){

@@ -1,8 +1,23 @@
-import {type BrowserWindow, Menu, Tray, nativeImage} from "electron";
+import {BrowserWindow, Menu, Tray, app, nativeImage} from "electron";
+import * as electronWallpaper from "electron-as-wallpaper";
+import fs from "fs";
+import {WALLPAPER_PATH} from "../main";
 
 const clickOpenMenu = (window:BrowserWindow) => () => {
   window.show();
   window.focus();
+};
+
+const clickQuit = () => {
+  for(const window of BrowserWindow.getAllWindows()){
+    if(window.title === "Wallpaper")
+      electronWallpaper.detach(window);
+    window.setClosable(true);
+    window.close();
+  }
+  app.quit();
+  electronWallpaper.refresh();
+  fs.writeFileSync(WALLPAPER_PATH, "[]");
 };
 
 const initTray = (window:BrowserWindow):Tray => {
@@ -25,9 +40,8 @@ const initTray = (window:BrowserWindow):Tray => {
       type: "separator"
     },
     {
-      role: "quit",
-      type: "normal",
-      label: "끝내기"
+      label: "끝내기",
+      click: clickQuit
     }
   ]);
   tray.addListener("click", clickOpenMenu(window));

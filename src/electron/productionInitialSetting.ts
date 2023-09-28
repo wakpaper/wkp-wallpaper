@@ -8,7 +8,7 @@ const productionInitialSetting = ():void => {
     openAtLogin: true,
     openAsHidden: true,
     path: app.getPath("exe"),
-    enabled: true
+    args: ["--hidden"]
   });
   if(fs.existsSync(WALLPAPER_PATH)){
     const chunk = fs.readFileSync(WALLPAPER_PATH);
