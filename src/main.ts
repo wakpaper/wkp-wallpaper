@@ -1,12 +1,12 @@
 import {BrowserWindow, Tray, app, ipcMain, screen} from "electron";
 import bindings from "bindings";
 import path from "node:path";
-import fs from "fs";
 import * as electronWallpaper from "electron-as-wallpaper";
 import spawnMain from "./window/spawnMain";
 import spawnWallpaper from "./window/spawnWallpaper";
 import initTray from "./electron/tray";
 import productionInitialSetting from "./electron/productionInitialSetting";
+import readWallpaperJSON, {saveWallpaperJSON} from "./utils/read-wallpaper.json";
 
 export const WALLPAPER_PATH = path.join(app.getPath("userData"), "wallpaper.json");
 const wallpaper = bindings("wallpaper");
@@ -61,25 +61,23 @@ ipcMain.on("display:attach", (event, index) => {
 });
 
 ipcMain.on("display:detach", (event, index) => {
-  const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
-  const data:Desktop[] = JSON.parse(chunk.toString());
+  const data = readWallpaperJSON();
   const dataItem = data.find(item => item.display === index);
   if(!dataItem){
     event.reply("displays:fail");
     return;
   }
   data.splice(index, 1);
-  fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+  saveWallpaperJSON(data);
   const window = BrowserWindow.getAllWindows().find(item => item.title === `Wallpaper${index}`);
   if(window){
     electronWallpaper.detach(window);
     window.destroy();
     event.reply("displays:success");
   }
-
 });
 
 ipcMain.on("reload", () => {
   wallpaper.refreshWallpaper();
-  fs.writeFileSync(WALLPAPER_PATH, "[]");
+  saveWallpaperJSON([]);
 });

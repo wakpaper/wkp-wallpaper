@@ -2,6 +2,7 @@ import {app} from "electron";
 import fs from "fs";
 import {WALLPAPER_PATH} from "../main";
 import spawnWallpaper from "../window/spawnWallpaper";
+import readWallpaperJSON, {saveWallpaperJSON} from "../utils/read-wallpaper.json";
 
 const productionInitialSetting = ():void => {
   app.setLoginItemSettings({
@@ -11,10 +12,9 @@ const productionInitialSetting = ():void => {
     args: ["--hidden"]
   });
   if(fs.existsSync(WALLPAPER_PATH)){
-    const chunk = fs.readFileSync(WALLPAPER_PATH);
-    const data = JSON.parse(chunk.toString());
+    const data = readWallpaperJSON();
     if(data.length > 0)
-      fs.writeFileSync(WALLPAPER_PATH, "[]");
+      saveWallpaperJSON([]);
     for(const item of data)
       spawnWallpaper(item.display, true);
   }

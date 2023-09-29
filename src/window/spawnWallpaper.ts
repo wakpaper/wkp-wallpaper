@@ -1,11 +1,9 @@
 import {BrowserWindow, screen} from "electron";
-import fs from "fs";
 import * as electronWallpaper from "electron-as-wallpaper";
-import {WALLPAPER_PATH} from "../main";
+import readWallpaperJSON, {saveWallpaperJSON} from "../utils/read-wallpaper.json";
 
 const spawnWallpaper = (index:number, computerReload:boolean = false):boolean => {
-  const chunk = fs.existsSync(WALLPAPER_PATH) ? fs.readFileSync(WALLPAPER_PATH) : "[]";
-  const data:Desktop[] = JSON.parse(chunk.toString());
+  const data:Desktop[] = readWallpaperJSON();
   if(data.some(item => item.display === index) && !computerReload)
     return false;
   const display = screen.getAllDisplays()[index];
@@ -33,7 +31,7 @@ const spawnWallpaper = (index:number, computerReload:boolean = false):boolean =>
   });
   wallpaperWindow.webContents.on("did-finish-load", () => {
     data.push({apply: true, display: index, pid: wallpaperWindow.webContents.getOSProcessId()});
-    fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
+    saveWallpaperJSON(data);
   });
   return true;
 };

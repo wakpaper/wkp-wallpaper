@@ -11,7 +11,7 @@ const spawnMain = ():BrowserWindow => {
     icon: "resources/img/favico.ico",
     show: false
   });
-  if(process.argv.indexOf("--hidden") !== -1)
+  if(process.argv.includes("--hidden"))
     mainWindow.hide();
   else
     mainWindow.show();

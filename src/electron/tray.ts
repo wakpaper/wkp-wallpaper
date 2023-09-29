@@ -1,4 +1,4 @@
-import {BrowserWindow, Menu, Tray, app, nativeImage} from "electron";
+import {BrowserWindow, Menu, Tray, app, nativeImage, screen} from "electron";
 import * as electronWallpaper from "electron-as-wallpaper";
 import fs from "fs";
 import {WALLPAPER_PATH} from "../main";
@@ -6,6 +6,9 @@ import {WALLPAPER_PATH} from "../main";
 const clickOpenMenu = (window:BrowserWindow) => () => {
   window.show();
   window.focus();
+};
+
+const closeWallpaper = (index:number) => () => {
 };
 
 const clickQuit = () => {
@@ -21,6 +24,7 @@ const clickQuit = () => {
 };
 
 const initTray = (window:BrowserWindow):Tray => {
+  const displays = screen.getAllDisplays();
   const icon = nativeImage.createFromPath("resources/img/icon.png");
   const tray = new Tray(icon.resize({width: 36}));
   const contextMenu = Menu.buildFromTemplate([
@@ -40,8 +44,12 @@ const initTray = (window:BrowserWindow):Tray => {
       type: "separator"
     },
     {
+      id: "wallpaper-close",
       label: "배경화면 끄기",
-      click: () => void 0
+      submenu: displays.map((item, index) => ({
+        label: `디스플레이 ${index + 1} 끄기`,
+        toolTip: item.id.toString()
+      }))
     },
     {
       type: "separator"
