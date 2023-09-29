@@ -10,7 +10,7 @@ const clickOpenMenu = (window:BrowserWindow) => () => {
 
 const clickQuit = () => {
   for(const window of BrowserWindow.getAllWindows()){
-    if(window.title === "Wallpaper")
+    if(window.title.startsWith("Wallpaper"))
       electronWallpaper.detach(window);
     window.setClosable(true);
     window.close();

@@ -14,12 +14,22 @@ const wallpaper = bindings("wallpaper");
 let window:BrowserWindow;
 let tray:Tray|null = null;
 
+const gotTheLock = app.requestSingleInstanceLock();
+if(!gotTheLock){
+  app.quit();
+}
+
 app.whenReady().then(() => {
   window = spawnMain();
   app.setName("왁페이퍼 엔진 테스트");
   if(app.isPackaged)
     productionInitialSetting();
   tray = initTray(window);
+});
+
+app.on("second-instance", () => {
+  window.show();
+  window.focus();
 });
 
 app.on("activate", () => {
@@ -60,13 +70,16 @@ ipcMain.on("display:detach", (event, index) => {
   }
   data.splice(index, 1);
   fs.writeFileSync(WALLPAPER_PATH, JSON.stringify(data));
-  wallpaper.detachWindow(process);
-  process.kill(dataItem.pid);
-  electronWallpaper.refresh();
-  event.reply("displays:success");
+  const window = BrowserWindow.getAllWindows().find(item => item.title === `Wallpaper${index}`);
+  if(window){
+    electronWallpaper.detach(window);
+    window.destroy();
+    event.reply("displays:success");
+  }
+
 });
 
 ipcMain.on("reload", () => {
-  electronWallpaper.refresh();
+  wallpaper.refreshWallpaper();
   fs.writeFileSync(WALLPAPER_PATH, "[]");
 });

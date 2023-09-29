@@ -24,7 +24,7 @@ const spawnWallpaper = (index:number, computerReload:boolean = false):boolean =>
     closable: false,
     roundedCorners: false,
     thickFrame: false,
-    title: "Wallpaper"
+    title: `Wallpaper${index}`
   });
   wallpaperWindow.setBounds(display.bounds);
   wallpaperWindow.loadFile("resources/html/wallpaper.html");

@@ -16,6 +16,10 @@
     "win": {
       "icon": "resources/img/favico.ico"
     },
+    "nsis": {
+      "allowToChangeInstallationDirectory": false,
+      "installerLanguages": ["ko_KR"]
+    },
     "directories": {
       "buildResources": "assets",
       "output": "deploy"
