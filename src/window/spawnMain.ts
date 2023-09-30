@@ -13,11 +13,12 @@ const spawnMain = ():BrowserWindow => {
   });
   if(process.argv.includes("--hidden"))
     mainWindow.hide();
-  else
+  else{
     mainWindow.show();
+    mainWindow.maximize();
+  }
   if(app.isPackaged)
     mainWindow.setMenu(null);
-  mainWindow.maximize();
   mainWindow.loadFile("resources/html/index.html");
   mainWindow.on("close", (event) => {
     if(mainWindow.isVisible()){

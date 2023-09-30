@@ -25,7 +25,7 @@ const spawnWallpaper = (index:number, computerReload:boolean = false):boolean =>
     title: `Wallpaper${index}`
   });
   wallpaperWindow.setBounds(display.bounds);
-  wallpaperWindow.loadFile("resources/html/wallpaper.html");
+  wallpaperWindow.loadFile("resources/html/wallpapers/IntroduceWaktaverse.html");
   electronWallpaper.attach(wallpaperWindow, {
     forwardMouseInput: true
   });

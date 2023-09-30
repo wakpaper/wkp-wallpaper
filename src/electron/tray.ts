@@ -18,7 +18,8 @@ const closeWallpaper = (index:number) => () => {
   const window = BrowserWindow.getAllWindows().find(item => item.title === `Wallpaper${index}`);
   if(window){
     electronWallpaper.detach(window);
-    window.destroy();
+    window.setClosable(true);
+    window.close();
   }
 };
 

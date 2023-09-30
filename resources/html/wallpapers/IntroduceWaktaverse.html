@@ -1,0 +1,239 @@
+<body>
+  <div class="container">
+    <div class="cards"></div>
+  </div>
+  <div class="detail-container">
+    <img src="./assets/gosegu.png" alt="gosegu" width="500px">
+    <div class="content">
+      <div class="name">고세구</div>
+      <div class="foreground">고세구</div>
+      <div class="hr"></div>
+      <div class="desc">세계최초 킹받는 아이돌입니다.</div>
+    </div>
+  </div>
+  <div class="tooltip">우왁굳</div>
+  <template id="card-panel">
+    <div class="card">
+      <img src="" width="100%">
+    </div>
+  </template>
+  <script>
+    const members = {
+      woowakgood: {
+        name: "우왁굳",
+        color: "#d7a669",
+        desc: "10년 넘게 방송하며 쌓아온 신뢰와 재미로 매일 같이 새로운 컨텐츠롤 선보이는 메타버스의 선두자라 불리는 그다. 이세계 아이돌도 그를 덕질하는 팬으로서 끈끈한 관계가 되는 것 같다."
+      },
+      ine: {
+        name: "아이네",
+        color: "#8a2be2",
+        desc: "아름다고 황홀한 노래 실력으로 많은 팬들을 홀린 이세계 아이돌의 멤버이다. 성악가를 꿈꿔온 시간이 있는만큼 많은 팬들이 그녀의 노랫소리를 듣고 방송에 찾아와 인사를 건넨다. '하이네-!'"
+      },
+      jingburger: {
+        name: "징버거",
+        color: "#ffbf00",
+        desc: "구수한 사투리와 그림 실력이 매력인 이세계 아이돌의 멤버이다. 머리 위에 햄버거가 올라가있는 모습이 상당히 매력적인 모습이다. 섹시/큐티를 모두 가진 그녀는 완성형 아이돌이다."
+      },
+      lilpa: {
+        name: "릴파",
+        color: "#5f5fd6",
+        desc: "시원하고 청령한 고음을 뽐내며 팬들의 고막을 책임지는 이세계 아이돌의 멤버이다. 과거 아이돌을 꿈꾸며 연습생으로 활동했던 전생이 있는만큼 아이네와 더불어 노래 실력이 엄청나다."
+      },
+      jururu: {
+        name: "주르르",
+        color: "#a90d74",
+        desc: "고멤에서 아이돌까지 서사가 완벽한 이세계 아이돌의 멤버이다. 객관적인 시선으로 바라본 본인의 모습을 읽어 그녀와 어울리는 많은 활동들을 하여 팬들을 홀리고 다닌다."
+      },
+      gosegu: {
+        name: "고세구",
+        color: "#467ec6",
+        desc: "귀엽지만 킹받는 인간 고양이로 많은 팬들의 사랑을 받는 이세계 아이돌의 멤버이다. 발라드부터 랩까지 다양한 노래의 장르를 소화하며 자신의 노래 실력을 증명하였다."
+      },
+      viichan: {
+        name: "비챤",
+        color: "#85ab20",
+        desc: "특유의 톤으로 일식 노래를 부르며 왁뮤의 문을 지키는 이세계 아이돌의 멤버이다. 이세계 아이돌의 막내인만큼 언니(멤버)들한테 굉장히 많은 귀여움과 사랑을 받고 있다."
+      },
+      roentgenium: {
+        name: "뢴트게늄",
+        color: "#d03967",
+        desc: "고멤 중 대상현의 1이다. 현재로서는 이세계 아이돌의 매니저도 같이 겸하고 있다. 성우 지망생이기도 하였던지라 노래 실력이며 더빙 실력이 꽤나 좋다."
+      }
+    };
+    const $tooltip = document.querySelector("div.tooltip");
+    const $cards = document.querySelector("div.cards");
+    const $detail = document.querySelector("div.detail-container");
+    const template = document.querySelector("#card-panel");
+    window.addEventListener("blur", () => {
+      window.focus();
+    });
+    $tooltip.addEventListener("animationend", event => {
+      if(event.animationName === "FadeOut")
+        $tooltip.classList.remove("active", "disappear");
+    });
+    $detail.addEventListener("animationend", event => {
+      if(event.animationName === "FadeOut")
+        $detail.classList.remove("active", "disappear");
+    });
+    $detail.addEventListener("click", () => {
+      $detail.classList.add("disappear");
+    });
+    for(const [k, v] of Object.entries(members)){
+      const newContent = document.importNode(template, true);
+      const node = newContent.content.cloneNode(true);
+      const $root = node.querySelector("div.card");
+      const $img = node.querySelector("img");
+      $img.src = `./assets/${k}.png`;
+      $img.alt = k;
+      $root.style.setProperty("--personal-color", v.color);
+      $root.addEventListener("click", () => {
+        $detail.classList.add("active");
+        const $img = $detail.querySelector("img");
+        const $name = $detail.querySelector("div.content>div.name");
+        const $foreground = $detail.querySelector("div.content>div.foreground");
+        const $desc = $detail.querySelector("div.content>div.desc");
+        $detail.style.setProperty("--personal-color", v.color);
+        $img.src = `./assets/${k}.png`;
+        $img.alt = k;
+        $name.textContent = v.name;
+        $foreground.textContent = v.name;
+        $desc.textContent = v.desc;
+      });
+      $root.addEventListener("mouseenter", () => {
+        if($tooltip.classList.contains("disappear"))
+          $tooltip.classList.remove("disappear", "active");
+        $tooltip.classList.add("active");
+        const rect = $root.getBoundingClientRect();
+        $tooltip.style.setProperty("top", `${rect.bottom + 20}px`);
+        $tooltip.style.setProperty("left", `${rect.left + rect.width / 2 - $tooltip.getBoundingClientRect().width / 2}px`);
+        $tooltip.textContent = v.name;
+      });
+      $root.addEventListener("mouseleave", () => {
+        $tooltip.classList.add("disappear");
+      });
+      $cards.appendChild(node);
+    }
+  </script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #222;
+    }
+    div.container {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    div.cards {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      gap: 10px;
+    }
+    div.card {
+      border-radius: 20px;
+      border-bottom: 10px solid var(--personal-color);
+      transition: background-color 100ms;
+    }
+    div.card:hover {
+      margin-top: auto;
+      background-color: var(--personal-color);
+      border-bottom: none;
+      cursor: pointer;
+    }
+    div.card:hover>img{
+      filter: grayscale(0);
+    }
+    div.card>img {
+      padding-bottom: 14px;
+      filter: grayscale(1);
+    }
+    div.detail-container {
+      position: absolute;
+      display: none;
+      align-items: flex-end;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    div.detail-container.active {
+      display: flex;
+      animation: FadeIn 300ms forwards;
+    }
+    div.detail-container.disappear {
+      animation: FadeOut 300ms forwards;
+    }
+    div.detail-container>img {
+      margin-left: 70px;
+    }
+    div.detail-container>div.content {
+      position: relative;
+      font-size: 32pt;
+      color: white;
+      margin-bottom: 400px;
+      width: 850px;
+    }
+    div.detail-container>div.content>div.name,
+    div.detail-container>div.content>div.foreground {
+      font-weight: 800;
+      letter-spacing: 10px;
+      z-index: 5;
+      position: relative;
+    }
+    div.detail-container>div.content>div.foreground {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      color: var(--personal-color);
+      font-weight: 800;
+      opacity: 0.8;
+      z-index: 4;
+    }
+    div.detail-container>div.content>div.hr {
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--personal-color) 50%, rgba(70,126,198,0) 100%);;
+      margin: 8px 0;
+    }
+    div.detail-container>div.content>div.desc {
+      margin-top: 4px;
+      font-size: 16pt;
+    }
+    div.tooltip {
+      position: absolute;
+      display: none;
+      top: 0;
+      left: 0;
+      padding: 8px;
+      min-width: 120px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border-radius: 5px;
+      text-align: center;
+      color: white;
+    }
+    div.tooltip.active {
+      display: block;
+      animation: FadeIn 300ms forwards;
+    }
+    div.tooltip.disappear {
+      animation: FadeOut 300ms forwards;
+    }
+    @keyframes FadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes FadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+  </style>
+</body>
