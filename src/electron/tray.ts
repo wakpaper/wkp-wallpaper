@@ -2,6 +2,7 @@ import {BrowserWindow, Menu, Tray, app, nativeImage, screen} from "electron";
 import * as electronWallpaper from "electron-as-wallpaper";
 import fs from "fs";
 import {WALLPAPER_PATH} from "../main";
+import readWallpaperJSON, {saveWallpaperJSON} from "../utils/read-wallpaper.json";
 
 const clickOpenMenu = (window:BrowserWindow) => () => {
   window.show();
@@ -9,6 +10,16 @@ const clickOpenMenu = (window:BrowserWindow) => () => {
 };
 
 const closeWallpaper = (index:number) => () => {
+  const data = readWallpaperJSON();
+  const dataItem = data.find(item => item.display === index);
+  if(!dataItem) return;
+  data.splice(index, 1);
+  saveWallpaperJSON(data);
+  const window = BrowserWindow.getAllWindows().find(item => item.title === `Wallpaper${index}`);
+  if(window){
+    electronWallpaper.detach(window);
+    window.destroy();
+  }
 };
 
 const clickQuit = () => {
@@ -48,7 +59,20 @@ const initTray = (window:BrowserWindow):Tray => {
       label: "배경화면 끄기",
       submenu: displays.map((item, index) => ({
         label: `디스플레이 ${index + 1} 끄기`,
-        toolTip: item.id.toString()
+        toolTip: item.id.toString(),
+        click: closeWallpaper(index)
+      }))
+    },
+    {
+      label: "배경화면 바꾸기 (즐찾 10개만)",
+      submenu: displays.map((item, index) => ({
+        label: `디스플레이 ${index + 1} 끄기`,
+        toolTip: item.id.toString(),
+        submenu: [
+          {
+            label: "한복비챤"
+          }
+        ]
       }))
     },
     {

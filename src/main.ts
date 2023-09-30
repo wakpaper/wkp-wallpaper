@@ -1,4 +1,4 @@
-import {BrowserWindow, Tray, app, ipcMain, screen} from "electron";
+import {BrowserWindow, Tray, app, ipcMain, protocol, screen} from "electron";
 import bindings from "bindings";
 import path from "node:path";
 import * as electronWallpaper from "electron-as-wallpaper";
